@@ -342,12 +342,12 @@ path.state.nodata{
         <div class="legend">
           <span>fewer orgs</span>
           <div class="legend-scale">
-            <div style="background:#e2e2e2"></div>
-            <div style="background:var(--red-1)"></div>
-            <div style="background:var(--red-3)"></div>
-            <div style="background:var(--red-5)"></div>
-            <div style="background:var(--red-7)"></div>
-            <div style="background:var(--red-9)"></div>
+            <div style="background:#c4cbcb"></div>
+            <div style="background:#afa2a2"></div>
+            <div style="background:#9a7a7a"></div>
+            <div style="background:#855151"></div>
+            <div style="background:#702929"></div>
+            <div style="background:#5b0000"></div>
           </div>
           <span>more orgs</span>
         </div>
@@ -401,13 +401,23 @@ for (const code in stateOrgs){
   if (counts[code] > maxCount) maxCount = counts[code];
 }
 
-const redScale = ["#ed7f7f","#eb4c4c","#d42f2f","#c21f1f","#b21010","#a40707","#900000","#700000","#5b0000"];
+// grey (fewer orgs) -> delta red (more orgs), interpolated for a smooth gradient
+const scaleStart = [196, 203, 203]; // #c4cbcb - lightest brand grey
+const scaleEnd   = [91, 0, 0];      // #5b0000 - darkest brand red
+const SCALE_STEPS = 9;
+const colorScale = Array.from({length: SCALE_STEPS}, (_, i) => {
+  const t = i / (SCALE_STEPS - 1);
+  const r = Math.round(scaleStart[0] + (scaleEnd[0] - scaleStart[0]) * t);
+  const g = Math.round(scaleStart[1] + (scaleEnd[1] - scaleStart[1]) * t);
+  const b = Math.round(scaleStart[2] + (scaleEnd[2] - scaleStart[2]) * t);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+});
 function colorFor(code){
   const c = counts[code];
   if (!c) return null; // no data
   const ratio = c / maxCount;
-  const idx = Math.min(redScale.length - 1, Math.floor(ratio * (redScale.length - 1)));
-  return redScale[idx];
+  const idx = Math.min(colorScale.length - 1, Math.floor(ratio * (colorScale.length - 1)));
+  return colorScale[idx];
 }
 
 // render paths
