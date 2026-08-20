@@ -164,37 +164,17 @@ h1{
 .legend{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
   font-size:11px;
   color:var(--slate);
   font-weight:400;
-  flex-wrap:wrap;
 }
 
 .legend-scale{
   display:flex;
   height:10px;
-  border:1px solid #d5d5d5;
 }
 .legend-scale div{width:16px;height:10px;}
-
-.legend-item{
-  display:flex;
-  align-items:center;
-  gap:5px;
-  margin-left:10px;
-}
-
-.legend-dot{
-  width:10px;
-  height:10px;
-  display:inline-block;
-}
-
-.legend-dot-nodata{
-  background:#e2e2e2;
-  border:1px dashed #b7b7b7;
-}
 
 svg#india-svg{
   width:100%;
@@ -219,7 +199,6 @@ path.state.active{
 }
 path.state.nodata{
   fill:#e2e2e2;
-  stroke-dasharray:1.2,1;
 }
 
 .side-panel{
@@ -363,15 +342,14 @@ path.state.nodata{
         <div class="legend">
           <span>fewer orgs</span>
           <div class="legend-scale">
-            <div style="background:#f0f0f0"></div>
-            <div style="background:#c9cbcb"></div>
-            <div style="background:#a2a5a6"></div>
-            <div style="background:#7b8081"></div>
-            <div style="background:#545a5c"></div>
-            <div style="background:#2d3537"></div>
+            <div style="background:#e2e2e2"></div>
+            <div style="background:var(--red-1)"></div>
+            <div style="background:var(--red-3)"></div>
+            <div style="background:var(--red-5)"></div>
+            <div style="background:var(--red-7)"></div>
+            <div style="background:var(--red-9)"></div>
           </div>
           <span>more orgs</span>
-          <span class="legend-item"><span class="legend-dot legend-dot-nodata"></span>no submissions</span>
         </div>
       </div>
       <svg id="india-svg" viewBox="-114 -50.4 611.9 695.7" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -415,7 +393,7 @@ svg.setAttribute('viewBox', DATA.viewBox);
 const stateOrgs = DATA.stateOrgs;
 const codeToName = DATA.codeToName;
 
-// build counts (used for popups/side panel, and to pick the top state on load)
+// build counts and color scale
 const counts = {};
 let maxCount = 0;
 for (const code in stateOrgs){
@@ -423,32 +401,18 @@ for (const code in stateOrgs){
   if (counts[code] > maxCount) maxCount = counts[code];
 }
 
-// the^delta brand scale: white/light-grey (fewer orgs) -> dark grey (more orgs)
-// endpoints are the exact brand hex codes: #f0f0f0 (light grey) and #2d3537 (darkest secondary grey)
-const scaleStart = [240, 240, 240]; // #f0f0f0
-const scaleEnd   = [45, 53, 55];    // #2d3537
-const SCALE_STEPS = 9;
-const colorScale = Array.from({length: SCALE_STEPS}, (_, i) => {
-  const t = i / (SCALE_STEPS - 1);
-  const r = Math.round(scaleStart[0] + (scaleEnd[0] - scaleStart[0]) * t);
-  const g = Math.round(scaleStart[1] + (scaleEnd[1] - scaleStart[1]) * t);
-  const b = Math.round(scaleStart[2] + (scaleEnd[2] - scaleStart[2]) * t);
-  return 'rgb(' + r + ',' + g + ',' + b + ')';
-});
+const redScale = ["#ed7f7f","#eb4c4c","#d42f2f","#c21f1f","#b21010","#a40707","#900000","#700000","#5b0000"];
 function colorFor(code){
   const c = counts[code];
   if (!c) return null; // no data
   const ratio = c / maxCount;
-  const idx = Math.min(colorScale.length - 1, Math.floor(ratio * (colorScale.length - 1)));
-  return colorScale[idx];
+  const idx = Math.min(redScale.length - 1, Math.floor(ratio * (redScale.length - 1)));
+  return redScale[idx];
 }
 
 // render paths
 const ns = "http://www.w3.org/2000/svg";
 let allCodes = Object.keys(DATA.paths);
-// draw grey (no-data) states first, then active/red states on top,
-// so a tiny state like Nagaland is never visually covered by a neighboring grey state
-allCodes.sort((a, b) => (counts[a] ? 1 : 0) - (counts[b] ? 1 : 0));
 allCodes.forEach(code => {
   const d = DATA.paths[code];
   const p = document.createElementNS(ns, "path");
